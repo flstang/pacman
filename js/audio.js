@@ -93,11 +93,42 @@ class AudioManager {
             osc.frequency.linearRampToValueAtTime(100 - (i * 5), now + (i * 0.1) + 0.05);
         }
         gainNode.gain.setValueAtTime(0.1, this.ctx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1.5);
+        gainNode.linearRampToValueAtTime(0, this.ctx.currentTime + 1.5);
         osc.connect(gainNode);
         gainNode.connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 1.5);
+    }
+
+    startPowerSiren() {
+        if (!this.enabled || this.powerSiren) return;
+
+        this.powerSiren = this.ctx.createOscillator();
+        this.powerGain = this.ctx.createGain();
+        
+        this.powerSiren.type = 'triangle';
+        this.powerSiren.frequency.setValueAtTime(200, this.ctx.currentTime);
+        
+        // Modulate frequency for the siren effect
+        const now = this.ctx.currentTime;
+        const duration = 0.4;
+        for (let i = 0; i < 100; i++) {
+            this.powerSiren.frequency.linearRampToValueAtTime(200, now + i * duration);
+            this.powerSiren.frequency.linearRampToValueAtTime(400, now + i * duration + duration/2);
+        }
+
+        this.powerGain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+        this.powerSiren.connect(this.powerGain);
+        this.powerGain.connect(this.ctx.destination);
+        this.powerSiren.start();
+    }
+
+    stopPowerSiren() {
+        if (this.powerSiren) {
+            this.powerGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+            this.powerSiren.stop(this.ctx.currentTime + 0.1);
+            this.powerSiren = null;
+        }
     }
 }
 

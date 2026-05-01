@@ -81,6 +81,7 @@ class GameEngine {
     activatePowerPellet() {
         this.ghostsEatenInCycle = 0;
         this.ghostMultiplier = 200;
+        audioManager.startPowerSiren();
         this.ghosts.forEach(g => {
             if (!g.isDead) {
                 g.isFrightened = true;
@@ -91,6 +92,7 @@ class GameEngine {
 
         clearTimeout(this.powerPelletTimer);
         this.powerPelletTimer = setTimeout(() => {
+            audioManager.stopPowerSiren();
             this.ghosts.forEach(g => {
                 g.isFrightened = false;
                 if (!g.isDead) g.speed = 1.4;
