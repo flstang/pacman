@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man Arcade (Vanilla JS)</title>
+    <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <div id="header">
+            <div class="score-container">
+                <span class="label">1UP</span>
+                <span id="score">00</span>
+            </div>
+            <div class="score-container">
+                <span class="label">HIGH SCORE</span>
+                <span id="high-score">00</span>
+            </div>
+        </div>
+        
+        <div id="canvas-wrapper">
+            <canvas id="gameCanvas" width="448" height="496"></canvas>
+            
+            <div id="ui-layer">
+                <!-- Menu Overlay -->
+                <div id="menu-overlay">
+                    <h1 id="main-title">PAC-MAN</h1>
+                    <p id="start-prompt" class="blink">PRESS SPACE TO START</p>
+                </div>
+                <!-- Ready Overlay -->
+                <div id="ready-overlay" class="hidden" style="color: var(--accent-color); font-size: 18px; position: absolute; top: 55%;">
+                    READY!
+                </div>
+                <!-- Game Over Overlay -->
+                <div id="game-over-overlay" class="hidden" style="color: red; font-size: 24px;">
+                    GAME OVER
+                </div>
+            </div>
+        </div>
+
+        <div id="footer">
+            <div id="lives">
+                <!-- Lives icons will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Game Logic -->
+    <script src="js/audio.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/entities.js"></script>
+    <script src="js/engine.js"></script>
+
+    <!-- Vanilla Game Controller -->
+    <script>
+        // Game State
+        let gameState = 'menu'; // menu, ready, playing, dying, gameover
+        let score = 0;
+        let lives = 3;
+        let highScore = parseInt(localStorage.getItem('pacmanHighScore') || '0', 10);
+
+        // DOM Elements
+        const scoreEl = document.getElementById('score');
+        const highScoreEl = document.getElementById('high-score');
+        const livesContainer = document.getElementById('lives');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Overlays
+        const menuOverlay = document.getElementById('menu-overlay');
+        const readyOverlay = document.getElementById('ready-overlay');
+        const gameOverOverlay = document.getElementById('game-over-overlay');
+
+        // Initialize Engine
+        const engine = new GameEngine();
+
+        // Update UI
+        function updateUI() {
+            scoreEl.textContent = score.toString().padStart(2, '0');
+            highScoreEl.textContent = highScore.toString().padStart(2, '0');
+            
+            // Update Lives
+            livesContainer.innerHTML = '';
+            for (let i = 0; i < Math.max(0, lives - 1); i++) {
+                const icon = document.createElement('div');
+                icon.className = 'life-icon';
+                livesContainer.appendChild(icon);
+            }
+
+            // Update Overlays
+            menuOverlay.classList.toggle('hidden', gameState !== 'menu');
+            readyOverlay.classList.toggle('hidden', gameState !== 'ready');
+            gameOverOverlay.classList.toggle('hidden', gameState !== 'gameover');
+        }
+
+        // Engine Hooks
+        engine.onScoreUpdate = (pts) => {
+            score += pts;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('pacmanHighScore', highScore);
+            }
+            updateUI();
+        };
+
+        engine.onLivesUpdate = () => {
+            gameState = 'dying';
+            audioManager.playDeath();
+            lives -= 1;
+            updateUI();
+            
+            setTimeout(() => {
+                if (lives > 0) {
+                    engine.resetPositions();
+                    gameState = 'ready';
+                    updateUI();
+                    setTimeout(() => {
+                        gameState = 'playing';
+                        updateUI();
+                    }, 2000);
+                } else {
+                    gameState = 'gameover';
+                    updateUI();
+                    setTimeout(() => {
+                        gameState = 'menu';
+                        updateUI();
+                    }, 3000);
+                }
+            }, 1500);
+        };
+
+        engine.onStateChange = (stateEvent) => {
+            if (stateEvent === 'level_complete') {
+                gameState = 'ready';
+                updateUI();
+                setTimeout(() => {
+                    engine.startLevel();
+                    gameState = 'playing';
+                    updateUI();
+                }, 2000);
+            }
+        };
+
+        // Input Handling
+        window.addEventListener('keydown', (e) => {
+            if (gameState === 'menu' && e.code === 'Space') {
+                audioManager.init();
+                audioManager.playStartSong();
+                gameState = 'ready';
+                score = 0;
+                lives = 3;
+                engine.startLevel();
+                updateUI();
+                setTimeout(() => {
+                    gameState = 'playing';
+                    updateUI();
+                }, 2000);
+            } else if (gameState === 'playing') {
+                engine.handleInput(e.key);
+            }
+        });
+
+        // Game Loop
+        function gameLoop() {
+            engine.update(gameState);
+            engine.draw(ctx, gameState);
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initial UI Sync
+        updateUI();
+        // Start Loop
+        requestAnimationFrame(gameLoop);
+
+    </script>
+</body>
+</html>

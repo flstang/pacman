@@ -1,0 +1,118 @@
+:root {
+    --bg-color: #000;
+    --text-color: #FFF;
+    --accent-color: #FFFF00; /* Pac-Man Yellow */
+    --font-family: 'Press Start 2P', cursive;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#header {
+    display: flex;
+    justify-content: space-between;
+    width: 448px;
+    padding: 0 10px;
+}
+
+.score-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+}
+
+#canvas-wrapper {
+    position: relative;
+    width: 448px;
+    height: 496px;
+}
+
+#gameCanvas {
+    background-color: transparent;
+    display: block;
+    image-rendering: pixelated;
+}
+
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#main-title {
+    color: var(--accent-color);
+    font-size: 48px;
+    text-shadow: 2px 2px #000;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+.blink {
+    animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+    50% { opacity: 0; }
+}
+
+#footer {
+    display: flex;
+    justify-content: space-between;
+    width: 448px;
+    padding: 0 10px;
+    height: 30px;
+}
+
+#lives {
+    display: flex;
+    gap: 5px;
+}
+
+.life-icon {
+    width: 20px;
+    height: 20px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    clip-path: polygon(100% 74%, 44% 48%, 100% 21%, 100% 0, 74% 0, 0 0, 0 100%, 100% 100%);
+    transform: rotate(180deg);
+}
+
+/* Vanilla JS Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+#ui-layer h1, #ui-layer p, #ui-layer div {
+    margin: 10px 0;
+}
