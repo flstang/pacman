@@ -30,7 +30,7 @@ class Entity {
                 if (map.getTile(col + this.nextDir.x, row + this.nextDir.y) !== 1) {
                     // Special case for ghosts and the gate (tile 4)
                     const isGate = map.getTile(col + this.nextDir.x, row + this.nextDir.y) === 4;
-                    const canPassGate = this.isDead || (row >= 12 && row <= 15 && col >= 11 && col <= 16);
+                    const canPassGate = this.isDead || this.isFrightened || (row >= 12 && row <= 15 && col >= 11 && col <= 16);
                     
                     if (!isGate || canPassGate) {
                         this.dir = { ...this.nextDir };
@@ -43,7 +43,7 @@ class Entity {
             // Stop if current direction is blocked by a wall
             const nextTile = map.getTile(col + this.dir.x, row + this.dir.y);
             const isNextGate = nextTile === 4;
-            const canPassNextGate = this.isDead || (row >= 12 && row <= 15 && col >= 11 && col <= 16);
+            const canPassNextGate = this.isDead || this.isFrightened || (row >= 12 && row <= 15 && col >= 11 && col <= 16);
 
             if (nextTile === 1 || (isNextGate && !canPassNextGate)) {
                 this.dir = { x: 0, y: 0 };
@@ -193,15 +193,8 @@ class Ghost extends Entity {
                 // If in cage, target the exit
                 target = { x: 13, y: 11 };
             } else if (this.isFrightened) {
-                const corners = [{x:1, y:1}, {x:26, y:1}, {x:1, y:29}, {x:26, y:29}];
-                let maxDist = -1;
-                corners.forEach(c => {
-                    const d = Math.pow(c.x - pacman.getCol(), 2) + Math.pow(c.y - pacman.getRow(), 2);
-                    if (d > maxDist) {
-                        maxDist = d;
-                        target = c;
-                    }
-                });
+                // Retreat to the center cage while frightened
+                target = { x: 13, y: 14 };
             } else {
                 target = this.mode === 'chase' ? this.getChaseTarget(pacman) : this.scatterTarget;
             }
@@ -220,7 +213,7 @@ class Ghost extends Entity {
                 const nextR = this.getRow() + d.y;
                 const tile = map.getTile(nextC, nextR);
                 const isGate = (tile === 4);
-                const canPassGate = this.isDead || (this.getRow() >= 12 && this.getRow() <= 15 && this.getCol() >= 11 && this.getCol() <= 16);
+                const canPassGate = this.isDead || this.isFrightened || (this.getRow() >= 12 && this.getRow() <= 15 && this.getCol() >= 11 && this.getCol() <= 16);
 
                 if (tile !== 1 && (!isGate || canPassGate)) {
                     validDirs.push(d);
